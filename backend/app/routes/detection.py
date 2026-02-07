@@ -1,8 +1,8 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
-import os
+from fastapi.responses import FileResponse
 from pathlib import Path
 from datetime import datetime
+import os
 
 from ..services.ai_detector import get_detector
 from ..services.pdf_generator import get_pdf_generator
@@ -24,112 +24,110 @@ Path(UPLOAD_FOLDER).mkdir(exist_ok=True)
 Path(REPORT_FOLDER).mkdir(exist_ok=True)
 
 
-# =========================================================
-# ANALYZE + GENERATE PDF
-# =========================================================
+# =====================================================
+# ANALYZE MEDIA + GENERATE PDF
+# =====================================================
 
 @router.post("/analyze")
 async def analyze_media(file: UploadFile = File(...)):
+
+    # ---------- File size ----------
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(0)
+
+    if size > MAX_FILE_SIZE:
+        raise HTTPException(400, "File too large")
+
+    content = await file.read()
+    media_hash = calculate_file_hash(content)
+
+    db = SessionLocal()
+
     try:
-        # ---------- File size ----------
-        file.file.seek(0, 2)
-        size = file.file.tell()
-        file.file.seek(0)
+        # ---------- Duplicate ----------
+        existing = db.query(Case).filter(
+            Case.media_hash == media_hash
+        ).first()
 
-        if size > MAX_FILE_SIZE:
-            raise HTTPException(400, "File too large")
-
-        content = await file.read()
-        media_hash = calculate_file_hash(content)
-
-        db = SessionLocal()
-
-        try:
-            # ---------- Duplicate ----------
-            existing = db.query(Case).filter(
-                Case.media_hash == media_hash
-            ).first()
-
-            if existing:
-                return {
-                    "success": True,
-                    "duplicate": True,
-                    "case_id": existing.id,
-                    "confidence": existing.detection_score,
-                    "is_ai_generated": existing.is_ai_generated
-                }
-
-            # ---------- New Case ----------
-            case_id = generate_case_id()
-            filename = file.filename
-
-            if is_image(filename):
-                media_type = "image"
-            elif is_video(filename):
-                media_type = "video"
-            else:
-                raise HTTPException(400, "Unsupported file type")
-
-            file_path = Path(UPLOAD_FOLDER) / f"{case_id}_{filename}"
-
-            with open(file_path, "wb") as f:
-                f.write(content)
-
-            # ---------- AI Detection ----------
-            detector = get_detector()
-
-            if media_type == "image":
-                result = detector.detect_fake_image(str(file_path))
-            else:
-                result = detector.detect_fake_video(str(file_path))
-
-            if result.get("error"):
-                raise HTTPException(500, result["error"])
-
-            # ---------- Save DB ----------
-            case = Case(
-                id=case_id,
-                media_type=media_type,
-                filename=filename,
-                media_hash=media_hash,
-                detection_score=result["confidence"],
-                is_ai_generated=result["is_ai_generated"],
-                report_path=None,
-                blockchain_tx=None,
-                created_at=datetime.utcnow()
-            )
-
-            db.add(case)
-            db.commit()
-            db.refresh(case)
-
-            # ====================================================
-            # 🔥 PDF GENERATION (THIS WAS MISSING)
-            # ====================================================
-
-            pdf_gen = get_pdf_generator()
-
-            pdf_data = {
-                "case_id": case_id,
-                "timestamp": datetime.utcnow().isoformat(),
-                "media_type": media_type,
-                "filename": filename,
-                "media_hash": media_hash,
-                "confidence": result["confidence"],
-                "is_ai_generated": result["is_ai_generated"],
-                "model": result.get("model", "AI Detector"),
-                "detection_details": result,
-                "blockchain_tx": None
+        if existing:
+            return {
+                "success": True,
+                "duplicate": True,
+                "case_id": existing.id,
+                "media_type": existing.media_type,
+                "filename": existing.filename,
+                "detection": {
+                    "is_ai_generated": existing.is_ai_generated,
+                    "confidence": existing.detection_score
+                },
+                "timestamp": existing.created_at.isoformat()
             }
 
-            pdf_path = pdf_gen.generate_report(pdf_data, str(file_path))
+        # ---------- New Case ----------
+        case_id = generate_case_id()
+        filename = file.filename
 
-            # ---------- Update DB with PDF ----------
-            case.report_path = pdf_path
-            db.commit()
+        if is_image(filename):
+            media_type = "image"
+        elif is_video(filename):
+            media_type = "video"
+        else:
+            raise HTTPException(400, "Unsupported file type")
 
-        finally:
-            db.close()
+        file_path = Path(UPLOAD_FOLDER) / f"{case_id}_{filename}"
+
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        # ---------- AI Detection ----------
+        detector = get_detector()
+
+        if media_type == "image":
+            result = detector.detect_fake_image(str(file_path))
+        else:
+            result = detector.detect_fake_video(str(file_path))
+
+        if result.get("error"):
+            raise HTTPException(500, result["error"])
+
+        # ---------- Save DB ----------
+        case = Case(
+            id=case_id,
+            media_type=media_type,
+            filename=filename,
+            media_hash=media_hash,
+            detection_score=result["confidence"],
+            is_ai_generated=result["is_ai_generated"],
+            report_path=None,
+            blockchain_tx=None,
+            created_at=datetime.utcnow()
+        )
+
+        db.add(case)
+        db.commit()
+        db.refresh(case)
+
+        # ---------- Generate PDF ----------
+        pdf_gen = get_pdf_generator()
+
+        pdf_data = {
+            "case_id": case_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "media_type": media_type,
+            "filename": filename,
+            "media_hash": media_hash,
+            "confidence": result["confidence"],
+            "is_ai_generated": result["is_ai_generated"],
+            "model": result.get("model", "AI Detector"),
+            "detection_details": result,
+            "blockchain_tx": None
+        }
+
+        pdf_path = pdf_gen.generate_report(pdf_data, str(file_path))
+
+        case.report_path = pdf_path
+        db.commit()
 
         return {
             "success": True,
@@ -141,19 +139,20 @@ async def analyze_media(file: UploadFile = File(...)):
                 "is_ai_generated": result["is_ai_generated"],
                 "confidence": result["confidence"]
             },
-            "report_generated": True
+            "timestamp": datetime.utcnow().isoformat()
         }
 
-    except Exception as e:
-        raise HTTPException(500, str(e))
+    finally:
+        db.close()
 
 
-# =========================================================
-# DOWNLOAD PDF
-# =========================================================
+# =====================================================
+# DOWNLOAD PDF REPORT
+# =====================================================
 
 @router.get("/report/{case_id}")
 async def download_report(case_id: str):
+
     db = SessionLocal()
     try:
         case = db.query(Case).filter(Case.id == case_id).first()
@@ -177,15 +176,17 @@ async def download_report(case_id: str):
         db.close()
 
 
-# =========================================================
-# GET CASE
-# =========================================================
+# =====================================================
+# GET SINGLE CASE
+# =====================================================
 
 @router.get("/case/{case_id}")
 async def get_case(case_id: str):
+
     db = SessionLocal()
     try:
         case = db.query(Case).filter(Case.id == case_id).first()
+
         if not case:
             raise HTTPException(404, "Case not found")
 
@@ -198,5 +199,40 @@ async def get_case(case_id: str):
             "report_path": case.report_path,
             "created_at": case.created_at.isoformat()
         }
+
+    finally:
+        db.close()
+
+
+# =====================================================
+# LIST ALL CASES (FOR FRONTEND DASHBOARD)
+# =====================================================
+
+@router.get("/cases")
+async def list_cases(limit: int = 50):
+
+    db = SessionLocal()
+    try:
+        cases = (
+            db.query(Case)
+            .order_by(Case.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        return {
+            "cases": [
+                {
+                    "case_id": c.id,
+                    "media_type": c.media_type,
+                    "filename": c.filename,
+                    "is_ai_generated": c.is_ai_generated,
+                    "confidence": c.detection_score,
+                    "created_at": c.created_at.isoformat()
+                }
+                for c in cases
+            ]
+        }
+
     finally:
         db.close()

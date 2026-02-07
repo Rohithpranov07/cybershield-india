@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from dotenv import load_dotenv
-from .routes import detection
+
+from app.routes import detection   # ← absolute import (important)
 
 load_dotenv()
 
@@ -13,42 +14,56 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware
+# ───────────────────── CORS ─────────────────────
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],   # allow frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
+# ───────────────────── ROUTES ─────────────────────
+
 app.include_router(detection.router)
 
-# Serve static files (for reports later)
-if os.path.exists("reports"):
-    app.mount("/reports", StaticFiles(directory="reports"), name="reports")
+# ───────────────────── STATIC FILES ─────────────────────
+
+REPORTS_DIR = "reports"
+
+if os.path.exists(REPORTS_DIR):
+    app.mount("/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
+
+# ───────────────────── BASIC ENDPOINTS ─────────────────────
 
 @app.get("/")
-async def root():
+def root():
     return {
-        "message": "CyberShield India API",
+        "message": "CyberShield India API running",
         "status": "operational",
         "version": "1.0.0",
-        "endpoints": {
+        "routes": {
             "docs": "/docs",
             "health": "/health",
             "analyze": "/api/detect/analyze",
-            "cases": "/api/detect/cases"
+            "cases": "/api/detect/cases",
+            "report": "/api/detect/report/{case_id}"
         }
     }
 
 @app.get("/health")
-async def health_check():
+def health():
     return {"status": "healthy"}
+
+# ───────────────────── RUN SERVER ─────────────────────
 
 if __name__ == "__main__":
     import uvicorn
-    host = os.getenv("API_HOST", "0.0.0.0")
-    port = int(os.getenv("API_PORT", 8000))
-    uvicorn.run(app, host=host, port=port)
+
+    uvicorn.run(
+        "app.main:app",
+        host=os.getenv("API_HOST", "0.0.0.0"),
+        port=int(os.getenv("API_PORT", 8000)),
+        reload=True
+    )
