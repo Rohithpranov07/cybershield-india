@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 from dotenv import load_dotenv
+from .routes import detection
 
 load_dotenv()
 
@@ -11,21 +13,34 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware for frontend
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(detection.router)
+
+# Serve static files (for reports later)
+if os.path.exists("reports"):
+    app.mount("/reports", StaticFiles(directory="reports"), name="reports")
 
 @app.get("/")
 async def root():
     return {
         "message": "CyberShield India API",
         "status": "operational",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "endpoints": {
+            "docs": "/docs",
+            "health": "/health",
+            "analyze": "/api/detect/analyze",
+            "cases": "/api/detect/cases"
+        }
     }
 
 @app.get("/health")
