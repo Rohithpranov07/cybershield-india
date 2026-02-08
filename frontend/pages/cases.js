@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { ArrowLeft, Download, AlertCircle, CheckCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  Download,
+  AlertCircle,
+  CheckCircle,
+  ExternalLink
+} from 'lucide-react'
 
 export default function Cases() {
   const [cases, setCases] = useState([])
@@ -13,7 +19,7 @@ export default function Cases() {
 
   const fetchCases = async () => {
     try {
-      const res = await axios.get('/api/detect/cases?limit=100')
+      const res = await axios.get('http://localhost:8000/api/detect/cases?limit=200')
       setCases(res.data.cases)
     } catch (err) {
       console.error('Failed to load cases', err)
@@ -42,10 +48,10 @@ export default function Cases() {
         <a href="/" className="hover:text-blue-600">
           <ArrowLeft />
         </a>
-        <h1 className="text-3xl font-bold">Case History</h1>
+        <h1 className="text-3xl font-bold">Forensic Case History</h1>
       </header>
 
-      <main className="max-w-6xl mx-auto p-8">
+      <main className="max-w-7xl mx-auto p-8">
 
         {/* Filters */}
         <div className="flex space-x-3 mb-6">
@@ -76,9 +82,9 @@ export default function Cases() {
         ) : filteredCases.length === 0 ? (
           <p className="bg-white p-6 rounded shadow">No cases found</p>
         ) : (
-          <div className="bg-white rounded-xl shadow overflow-hidden">
+          <div className="bg-white rounded-xl shadow overflow-x-auto">
 
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead className="bg-gray-100 text-left">
                 <tr>
                   <th className="p-3">Case ID</th>
@@ -86,7 +92,8 @@ export default function Cases() {
                   <th className="p-3">Type</th>
                   <th className="p-3">Result</th>
                   <th className="p-3">Confidence</th>
-                  <th className="p-3">PDF</th>
+                  <th className="p-3">Blockchain</th>
+                  <th className="p-3">Report</th>
                 </tr>
               </thead>
 
@@ -94,13 +101,13 @@ export default function Cases() {
                 {filteredCases.map(c => (
                   <tr key={c.case_id} className="border-t hover:bg-gray-50">
 
-                    <td className="p-3 font-mono text-sm">
-                      {c.case_id.slice(0, 18)}...
+                    <td className="p-3 font-mono">
+                      {c.case_id.slice(0, 20)}...
                     </td>
 
                     <td className="p-3">{c.filename}</td>
 
-                    <td className="p-3 uppercase text-sm">{c.media_type}</td>
+                    <td className="p-3 uppercase">{c.media_type}</td>
 
                     <td className="p-3">
                       {c.is_ai_generated ? (
@@ -116,6 +123,24 @@ export default function Cases() {
 
                     <td className="p-3">
                       {(c.confidence * 100).toFixed(1)}%
+                    </td>
+
+                    {/* 🔗 BLOCKCHAIN STATUS */}
+                    <td className="p-3">
+                      {c.blockchain_tx ? (
+                        <a
+                          href={`https://sepolia.etherscan.io/tx/${c.blockchain_tx}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-purple-600 hover:text-purple-800 flex items-center gap-1 text-xs"
+                        >
+                          ⛓ Verified <ExternalLink size={12}/>
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">
+                          Pending (needs gas)
+                        </span>
+                      )}
                     </td>
 
                     <td className="p-3">

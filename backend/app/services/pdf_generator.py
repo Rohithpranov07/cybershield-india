@@ -270,16 +270,23 @@ class ForensicPDFGenerator:
         
         story.append(Spacer(1, 0.3 * inch))
         
-        # Blockchain proof (placeholder for Step 5)
+        # Blockchain proof section
         story.append(Paragraph("BLOCKCHAIN EVIDENCE INTEGRITY", self.styles['SectionHeader']))
-        
-        blockchain_tx = case_data.get('blockchain_tx', 'Pending blockchain registration')
-        blockchain_data = [
-            ['Status:', 'Registered on Polygon Network' if blockchain_tx and blockchain_tx != 'Pending blockchain registration' else 'Pending'],
-            ['Transaction Hash:', blockchain_tx if blockchain_tx else 'Will be added in Step 5'],
-            ['Verification:', 'Evidence cryptographically secured'],
-        ]
-        
+
+        blockchain_tx = case_data.get('blockchain_tx')
+
+        if blockchain_tx:
+            blockchain_data = [
+                ['Status:', 'Registered on Ethereum Sepolia'],
+                ['Transaction Hash:', blockchain_tx[:40] + '...'],
+                ['Verification:', 'Evidence cryptographically secured'],
+                ['Explorer:', f'sepolia.etherscan.io/tx/{blockchain_tx[:20]}...'],
+            ]
+        else:
+            blockchain_data = [
+                ['Status:', 'Pending blockchain registration'],
+                ['Note:', 'Will be anchored when gas is available'],
+            ]
         blockchain_table = Table(blockchain_data, colWidths=[2 * inch, 4 * inch])
         blockchain_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#ecf0f1')),
@@ -291,6 +298,7 @@ class ForensicPDFGenerator:
         ]))
         story.append(blockchain_table)
         story.append(Spacer(1, 0.3 * inch))
+
         
         # === PAGE 3: CONCLUSIONS ===
         story.append(PageBreak())
