@@ -272,11 +272,8 @@ npm test
 
 ## 🎬 Demo
 
-### Live Demo
-👉 [CyberShield India Demo](https://cybershield-india.demo) *(deployment link)*
-
 ### Video Walkthrough
-👉 [Watch Demo Video](https://youtube.com/demo) *(2-minute demo)*
+👉 [Watch Demo Video](https://drive.google.com/drive/folders/1EuA1UwdH802tXnY1XU1fhMGj1F4LUmO-?usp=sharing) *(2-minute demo)*
 
 ---
 
