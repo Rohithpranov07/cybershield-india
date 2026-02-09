@@ -395,13 +395,7 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 👥 Team
 
-- **Your Name** - AI/ML Engineer - [GitHub](https://github.com/username)
-- **Team Member 2** - Blockchain Developer
-- **Team Member 3** - Full-Stack Developer
-
----
 
 ## 📄 License
 
