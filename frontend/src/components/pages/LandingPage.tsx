@@ -5,7 +5,6 @@ import { Shield, Brain, FileText, Lock, TrendingUp, Clock, CheckCircle, Upload, 
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { RotatingEmblem } from '../RotatingEmblem';
-import heroImage from 'figma:asset/f1d55bdd1b732981cce7aac5082bafdf2a1dcdea.png';
 import emblemOfIndia from 'figma:asset/c676f7b079899a84b0511549e8ec56744952e077.png';
 
 interface LandingPageProps {
@@ -66,7 +65,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
               <motion.img 
                 src={emblemOfIndia} 
                 alt="National Emblem of India" 
-                className="w-96 h-96 lg:w-[500px] lg:h-[500px] object-contain"
+                className="w-[1900px] h-[1900px] lg:w-[1900px] lg:h-[1900px] object-contain"
                 animate={{ rotateY: 360 }}
                 transition={{
                   duration: 8,

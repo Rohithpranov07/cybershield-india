@@ -2304,3 +2304,28 @@
     opacity: .5;
   }
 }
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.tip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}

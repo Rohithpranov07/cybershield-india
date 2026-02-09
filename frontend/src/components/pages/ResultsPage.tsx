@@ -29,6 +29,7 @@ export function ResultsPage({ result, onNavigate }: ResultsPageProps) {
   if (!result) return null;
 
   const aiGenerated = result.detection?.is_ai_generated || false;
+
   const confidence = result?.detection?.confidence
     ? Math.round(result.detection.confidence * 100)
     : 0;
@@ -209,8 +210,6 @@ export function ResultsPage({ result, onNavigate }: ResultsPageProps) {
             </Button>
           )}
 
-          {/* 🕵️ DIGITAL FOOTPRINT */}
-
           <Button
             variant="outline"
             icon={<Eye size={20} />}
@@ -230,6 +229,17 @@ export function ResultsPage({ result, onNavigate }: ResultsPageProps) {
           >
             New Analysis
           </Button>
+
+          {/* 🚨 COMPLAINT ASSISTANT BUTTON */}
+
+          {aiGenerated && (
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white border-0 col-span-2 lg:col-span-1"
+              onClick={() => onNavigate('complaint')}
+            >
+              🚨 File Cyber Crime Complaint
+            </Button>
+          )}
 
         </div>
 

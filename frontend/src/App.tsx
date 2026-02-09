@@ -10,6 +10,7 @@ import { DashboardPage } from './components/pages/DashboardPage';
 import { ReportPage } from './components/pages/ReportPage';
 import { VerifyPage } from './components/pages/VerifyPage';
 import { FootprintPage } from './components/pages/footprint/FootprintPage';
+import { ComplaintAssistantPage } from './components/pages/ComplaintAssistantPage';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -28,17 +29,25 @@ export default function App() {
   /* ================= NAVIGATION ================= */
 
   const handleNavigate = (page: string, caseId?: string) => {
-    if (page === "footprint" && caseId) {
-      setActiveCaseId(caseId);
-      setCurrentPage("footprint");
-    } else {
-      setCurrentPage(page);
+
+    if (page === 'footprint') {
+      setActiveCaseId(caseId || analysisResult?.case_id || null);
+      setCurrentPage('footprint');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
 
+    if (page === 'complaint') {
+      setCurrentPage('complaint');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /* ================= REAL BACKEND ANALYSIS ================= */
+  /* ================= BACKEND ANALYSIS ================= */
 
   const handleAnalyze = async (file: File) => {
     setIsAnalyzing(true);
@@ -71,7 +80,10 @@ export default function App() {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600" />
           </motion.div>
 
-          <h2 className="text-3xl font-bold mb-3">Analyzing Evidence...</h2>
+          <h2 className="text-3xl font-bold mb-3">
+            Analyzing Evidence...
+          </h2>
+
           <p className="text-white/80">
             AI detection + blockchain verification running
           </p>
@@ -99,6 +111,7 @@ export default function App() {
       <main className="flex-1">
 
         <AnimatePresence mode="wait">
+
           <motion.div
             key={currentPage}
             initial={{ opacity: 0, y: 20 }}
@@ -115,7 +128,7 @@ export default function App() {
               <UploadPage onAnalyze={handleAnalyze} />
             )}
 
-            {currentPage === 'results' && (
+            {currentPage === 'results' && analysisResult && (
               <ResultsPage
                 result={analysisResult}
                 onNavigate={handleNavigate}
@@ -124,7 +137,14 @@ export default function App() {
 
             {currentPage === 'footprint' && (
               <FootprintPage
-                caseId={analysisResult?.case_id}
+                caseId={activeCaseId}
+                onBack={() => handleNavigate('results')}
+              />
+            )}
+
+            {currentPage === 'complaint' && analysisResult && (
+              <ComplaintAssistantPage
+                result={analysisResult}
                 onBack={() => handleNavigate('results')}
               />
             )}
@@ -142,6 +162,7 @@ export default function App() {
             )}
 
           </motion.div>
+
         </AnimatePresence>
 
       </main>
