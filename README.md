@@ -21,6 +21,12 @@ AI-generated fake content (deepfakes, manipulated images) is being weaponized fo
 ```
 Upload Media → AI Detection → Forensic Report → Blockchain Proof → Case Dashboard
 ```
+## 🎬 Demo
+
+### Video Walkthrough
+👉 [Watch Demo Video](https://drive.google.com/drive/folders/1EuA1UwdH802tXnY1XU1fhMGj1F4LUmO-?usp=sharing) *(2-minute demo)*
+
+---
 
 ### Key Features
 
