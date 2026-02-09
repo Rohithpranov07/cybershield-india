@@ -45,6 +45,22 @@ This system provides **law-enforcement-grade** authenticity verification, forens
 | 🔍 **Public Verification** | Blockchain transaction verification via PolygonScan |
 
 ---
+<div align="center">
+
+# 🛡️ CyberShield India
+## AI + Blockchain Digital Forensics Platform
+
+[![Watch Demo Video](https://img.shields.io/badge/▶️_WATCH_DEMO_VIDEO-FF0000?style=for-the-badge&logo=youtube&logoColor=white&labelColor=282828)](https://drive.google.com/file/d/1sgBsIGXqrfic5hmoCoW06dAnDXqnlKuO/view?usp=sharing)
+
+**5-minute demo showcasing AI detection, forensic reporting, and blockchain evidence**
+
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![React](https://img.shields.io/badge/React-18.3+-61dafb.svg)](https://react.dev)
+[![Blockchain](https://img.shields.io/badge/Blockchain-Polygon-8247e5.svg)](https://polygon.technology)
+
+</div>
+
+---
 
 ## 🧠 Technology Stack
 
