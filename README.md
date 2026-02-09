@@ -417,13 +417,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ---
 
-## 📧 Contact
 
-**Project Link:** [https://github.com/yourusername/cybershield-india](https://github.com/yourusername/cybershield-india)
-
-**Email:** your.email@example.com
-
----
 
 <div align="center">
 
